@@ -3,6 +3,12 @@
 import { useState, useEffect, useRef } from "react"
 import type { Socket } from "socket.io-client"
 
+// Interfaces for room and user-related data
+interface UserData {
+  socketId: string;
+  userName: string;
+}
+
 interface PeerConnectionsResult {
   peerStreams: Record<string, MediaStream>
   updatePeerStreams: (stream: MediaStream) => void
@@ -150,7 +156,7 @@ export function usePeerConnections(
     }
 
     // Handle socket events for WebRTC signaling
-    const handleUserJoined = ({ socketId, userName }: { socketId: string; userName: string }) => {
+    const handleUserJoined = ({ socketId, userName }: UserData) => {
       console.log(`User joined: ${userName} (${socketId})`)
       // Ensure a peer connection is created for the new user
       const existingPeerConnection = peerConnectionsRef.current[socketId]
@@ -170,7 +176,7 @@ export function usePeerConnections(
       // Create peer connection if it doesn't exist
       let peerConnection = peerConnectionsRef.current[fromId]
       if (!peerConnection) {
-        peerConnection = createPeerConnection(fromId, false)
+        peerConnection = createPeerConnection(fromId, false)!
         if (!peerConnection) return
       }
 
@@ -213,7 +219,7 @@ export function usePeerConnections(
       }
     }
 
-    const handleRoomUsers = (users: any[]) => {
+    const handleRoomUsers = (users: UserData[]) => {
       console.log("Users in room:", users)
 
       users.forEach((user) => {

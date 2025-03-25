@@ -35,8 +35,8 @@ interface ChatMessage {
 export default function MeetingRoom() {
   const params = useParams();
   const searchParams = useSearchParams();
-  const userName = searchParams.get("name") || "You";
-  const meetingId = params.id as string;
+  const meetingId = params!.id as string;
+  const userName = searchParams!.get("name") || "You";
   const isMobile = useMobile();
 
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -67,6 +67,7 @@ export default function MeetingRoom() {
   );
 
   const handleParticipantsList = (serverParticipants: Participant[]) => {
+    if (!socket) return;
     const selfParticipant: Participant = {
       id: 1,
       name: userName || "You",
@@ -724,8 +725,7 @@ export default function MeetingRoom() {
                     stroke="currentColor"
                     strokeWidth="2"
                     strokeLinecap="round"
-                    strokeLinejoin="roun
-d"
+                    strokeLinejoin="round"
                   >
                     <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
                     <line x1="8" y1="21" x2="16" y2="21" />
