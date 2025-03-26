@@ -15,6 +15,13 @@ interface NextApiResponseWithSocket extends NextApiResponse {
   socket: SocketWithIO
 }
 
+interface Participant {
+  socketId: string
+  userName: string
+  isMuted: boolean
+  isVideoOff: boolean
+}
+
 const SocketHandler = (req: NextApiRequest, res: NextApiResponseWithSocket) => {
   if (res.socket.server.io) {
     res.end()
@@ -22,72 +29,88 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseWithSocket) => {
   }
 
   const io = new Server(res.socket.server, {
+    path: "/api/socket",
     addTrailingSlash: false,
   })
 
   res.socket.server.io = io
 
+  const rooms = new Map<string, Set<string>>()
+  const participants = new Map<string, Participant>()
+
   io.on("connection", (socket) => {
-    const meetingId = socket.handshake.query.meetingId as string
+    const roomId = socket.handshake.query.roomId as string
+    const userName = socket.handshake.query.userName as string
 
-    socket.join(meetingId)
+    // Initialize room if it doesn't exist
+    if (!rooms.has(roomId)) {
+      rooms.set(roomId, new Set())
+    }
 
-    // Notify others when a new participant joins
-    socket.to(meetingId).emit("participant-joined", {
+    // Add participant to room
+    rooms.get(roomId)?.add(socket.id)
+    participants.set(socket.id, {
       socketId: socket.id,
-      name: socket.handshake.query.userName || "Anonymous",
+      userName,
       isMuted: false,
       isVideoOff: false,
     })
 
-    // Send existing participants to the new joiner
-    const roomSockets = io.sockets.adapter.rooms.get(meetingId)
-    if (roomSockets) {
-      const participants = []
-      for (const socketId of roomSockets) {
-        if (socketId !== socket.id) {
-          const participantSocket = io.sockets.sockets.get(socketId)
-          if (participantSocket) {
-            participants.push({
-              socketId,
-              name: participantSocket.handshake.query.userName || "Anonymous",
-              isMuted: false,
-              isVideoOff: false,
-            })
-          }
-        }
-      }
-      socket.emit("participants-list", participants)
-    }
+    // Join room
+    socket.join(roomId)
+
+    // Notify others about new participant
+    socket.to(roomId).emit("participant-joined", participants.get(socket.id))
+
+    // Handle get participants request
+    socket.on("get-participants", () => {
+      const roomParticipants = Array.from(rooms.get(roomId) || [])
+        .map(id => participants.get(id))
+        .filter(p => p && p.socketId !== socket.id)
+      socket.emit("participants-list", roomParticipants)
+    })
 
     // Handle WebRTC signaling
-    socket.on("signal", ({ signal, to }) => {
-      socket.to(to).emit("signal", { signal, from: socket.id })
+    socket.on("offer", ({ targetId, sdp }) => {
+      socket.to(targetId).emit("offer", {
+        fromId: socket.id,
+        sdp,
+      })
     })
 
-    socket.on("participant-update", (participant) => {
-      socket.to(meetingId).emit("participant-updated", participant)
+    socket.on("answer", ({ targetId, sdp }) => {
+      socket.to(targetId).emit("answer", {
+        fromId: socket.id,
+        sdp,
+      })
     })
 
-    socket.on("send-message", (message) => {
-      socket.to(meetingId).emit("new-message", message)
+    socket.on("ice-candidate", ({ targetId, candidate }) => {
+      socket.to(targetId).emit("ice-candidate", {
+        fromId: socket.id,
+        candidate,
+      })
     })
 
-    socket.on("media-state-change", (state) => {
-      socket.to(meetingId).emit("media-state-updated", state)
+    // Handle participant updates
+    socket.on("update-media-state", (state) => {
+      const participant = participants.get(socket.id)
+      if (participant) {
+        participants.set(socket.id, { ...participant, ...state })
+        socket.to(roomId).emit("participant-updated", participants.get(socket.id))
+      }
     })
 
-    socket.on("screen-share-started", () => {
-      socket.to(meetingId).emit("screen-share-started", { socketId: socket.id })
-    })
-
-    socket.on("screen-share-ended", () => {
-      socket.to(meetingId).emit("screen-share-ended", { socketId: socket.id })
-    })
-
+    // Handle disconnect
     socket.on("disconnect", () => {
-      socket.to(meetingId).emit("participant-left", socket.id)
-      socket.leave(meetingId)
+      rooms.get(roomId)?.delete(socket.id)
+      participants.delete(socket.id)
+      socket.to(roomId).emit("participant-left", socket.id)
+
+      // Clean up empty room
+      if (rooms.get(roomId)?.size === 0) {
+        rooms.delete(roomId)
+      }
     })
   })
 
@@ -95,4 +118,3 @@ const SocketHandler = (req: NextApiRequest, res: NextApiResponseWithSocket) => {
 }
 
 export default SocketHandler
-

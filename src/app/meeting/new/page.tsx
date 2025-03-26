@@ -2,11 +2,14 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { motion } from "framer-motion"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Copy, Link2 } from "lucide-react"
+import { Video, ArrowLeft, Camera, Mic, Copy, Link2 } from "lucide-react"
+import { toast } from "sonner"
 
 export default function NewMeeting() {
   const router = useRouter()
@@ -22,145 +25,214 @@ export default function NewMeeting() {
   }, [])
 
   const copyLink = () => {
-    navigator.clipboard.writeText(`https://meet.example.com/${meetingId}`)
-  }
+    navigator.clipboard.writeText(`https://dvmeet.com/${meetingId}`)
+    toast.success("Link copied!", {
+      description: "Meeting link has been copied to clipboard"
+    })
+  }  
 
   const startMeeting = (): void => {
     if (!userName.trim()) {
       setNameError("Please enter your name")
       return
     }
-    
+
     router.push(`/meeting/${meetingId}?name=${encodeURIComponent(userName)}`)
+  }
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  }
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1 },
   }
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#1a73e8]"></div>
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-black via-zinc-900 to-neutral-900">
+        <div className="relative">
+          <div className="h-16 w-16 rounded-full border-4 border-neutral-300 border-t-transparent animate-spin"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Video className="h-6 w-6 text-neutral-300" />
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="bg-[#1a73e8] text-white">
-        <div className="container mx-auto px-4 py-3 flex items-center">
-          <div className="flex items-center gap-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-6 w-6"
-            >
-              <path d="M15 10l4.553-2.276A1 1 0 0 1 21 8.618v6.764a1 1 0 0 1-1.447.894L15 14v-4z" />
-              <rect x="1" y="6" width="15" height="12" rx="2" ry="2" />
-            </svg>
-            <span className="font-medium text-lg">Meet</span>
+    <div className="min-h-screen bg-gradient-to-b from-black via-zinc-900 to-neutral-900 text-white">
+      {/* Animated background elements */}
+      <div className="fixed inset-0 z-0 opacity-10">
+        {[...Array(15)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full bg-white"
+            initial={{
+              width: Math.random() * 300 + 50,
+              height: Math.random() * 300 + 50,
+              x: Math.random() * window.innerWidth,
+              y: Math.random() * window.innerHeight,
+              opacity: Math.random() * 0.5,
+            }}
+            animate={{
+              y: [0, Math.random() * 100 - 50],
+              x: [0, Math.random() * 100 - 50],
+            }}
+            transition={{
+              duration: Math.random() * 10 + 10,
+              repeat: Number.POSITIVE_INFINITY,
+              repeatType: "reverse",
+              ease: "easeInOut",
+            }}
+          />
+        ))}
+      </div>
+
+      <header className="relative z-10">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex justify-between items-center">
+            <Link href="/" className="flex items-center gap-2">
+              <motion.div
+                initial={{ rotate: -10, scale: 0.9 }}
+                animate={{ rotate: 0, scale: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Video className="h-8 w-8 text-neutral-300" />
+              </motion.div>
+              <motion.span
+                className="font-bold text-2xl bg-clip-text text-transparent bg-gradient-to-r from-neutral-300 to-zinc-300"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+              >
+                dvMeet
+              </motion.span>
+            </Link>
+            <Link href="/">
+              <Button variant="ghost" className="text-neutral-300 hover:text-white hover:bg-zinc-800/30">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Home
+              </Button>
+            </Link>
           </div>
         </div>
       </header>
-      <main className="flex-1 bg-[#f8f9fa]">
+
+      <main className="relative z-10 flex-1">
         <div className="container mx-auto px-4 py-12">
-          <div className="max-w-md mx-auto bg-white rounded-lg shadow-sm p-6 space-y-6">
-            <h1 className="text-2xl font-semibold text-[#202124]">Your meeting is ready</h1>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Link2 className="h-5 w-5 text-[#5f6368]" />
-                  <span className="text-sm font-medium text-[#202124]">Meeting link</span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={copyLink}
-                  className="h-8 gap-1 text-[#1a73e8] hover:bg-[#e8f0fe] hover:text-[#1a73e8]"
+          <motion.div className="max-w-md mx-auto" variants={containerVariants} initial="hidden" animate="visible">
+            <motion.div
+              className="bg-gradient-to-br from-zinc-900/70 to-neutral-900/70 rounded-2xl backdrop-blur-sm border border-zinc-700/30 shadow-xl overflow-hidden"
+              variants={itemVariants}
+            >
+              <div className="p-8">
+                <motion.h1
+                  className="text-3xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-neutral-300 to-zinc-300"
+                  variants={itemVariants}
                 >
-                  <Copy className="h-4 w-4" />
-                  Copy
-                </Button>
-              </div>
-              <Input value={`https://meet.example.com/${meetingId}`} readOnly className="text-[#5f6368]" />
-              
-              <div className="space-y-2">
-                <Label htmlFor="user-name" className="text-[#202124]">
-                  Your name
-                </Label>
-                <Input
-                  id="user-name"
-                  placeholder="Enter your name"
-                  value={userName}
-                  onChange={(e) => {
-                    setUserName(e.target.value)
-                    setNameError("")
-                  }}
-                  className="text-[#3c4043]"
-                />
-                {nameError && <p className="text-sm text-[#ea4335]">{nameError}</p>}
-              </div>
+                  Your Meeting is Ready
+                </motion.h1>
+                <motion.p className="text-neutral-200 mb-6" variants={itemVariants}>
+                  Share the link with others or join now
+                </motion.p>
 
-              <div className="pt-4 space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="camera" className="flex items-center gap-2 text-[#202124]">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="h-5 w-5 text-[#5f6368]"
+                <div className="space-y-6">
+                  <motion.div variants={itemVariants}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Link2 className="h-5 w-5 text-neutral-400" />
+                        <span className="text-sm font-medium text-neutral-100">Meeting link</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={copyLink}
+                        className="h-8 gap-1 text-neutral-300 hover:bg-zinc-800/30 hover:text-white"
+                      >
+                        <Copy className="h-4 w-4" />
+                        Copy
+                      </Button>
+                    </div>
+                    <div className="relative">
+                      <Input
+                        value={`https://dvmeet.com/${meetingId}`}
+                        readOnly
+                        className="bg-zinc-950/50 border-zinc-700/50 text-neutral-200 pr-20"
+                      />
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-transparent to-zinc-900/50 pointer-events-none"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 1, duration: 1 }}
+                      />
+                    </div>
+                  </motion.div>
+
+                  <motion.div className="space-y-2" variants={itemVariants}>
+                    <Label htmlFor="user-name" className="text-neutral-100">
+                      Your name
+                    </Label>
+                    <Input
+                      id="user-name"
+                      placeholder="Enter your name"
+                      value={userName}
+                      onChange={(e) => {
+                        setUserName(e.target.value)
+                        setNameError("")
+                      }}
+                      className="bg-zinc-950/50 border-zinc-700/50 text-white placeholder:text-neutral-400 focus:border-neutral-500 transition-all"
+                    />
+                    {nameError && (
+                      <motion.p
+                        className="text-sm text-red-400"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                      >
+                        {nameError}
+                      </motion.p>
+                    )}
+                  </motion.div>
+
+                  <motion.div className="pt-4 space-y-4" variants={itemVariants}>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="camera" className="flex items-center gap-2 text-neutral-100">
+                        <Camera className="h-5 w-5 text-neutral-400" />
+                        <span>Camera</span>
+                      </Label>
+                      <Switch id="camera" defaultChecked className="data-[state=checked]:bg-neutral-500" />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="microphone" className="flex items-center gap-2 text-neutral-100">
+                        <Mic className="h-5 w-5 text-neutral-400" />
+                        <span>Microphone</span>
+                      </Label>
+                      <Switch id="microphone" defaultChecked className="data-[state=checked]:bg-neutral-500" />
+                    </div>
+                  </motion.div>
+
+                  <motion.div variants={itemVariants}>
+                    <Button
+                      onClick={startMeeting}
+                      className="w-full bg-gradient-to-r from-neutral-700 to-zinc-800 hover:from-neutral-800 hover:to-zinc-900 text-white border-0 rounded-xl py-6 text-lg"
                     >
-                      <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
-                      <circle cx="12" cy="13" r="3" />
-                    </svg>
-                    <span>Camera</span>
-                  </Label>
-                  <Switch id="camera" defaultChecked />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="microphone" className="flex items-center gap-2 text-[#202124]">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="h-5 w-5 text-[#5f6368]"
-                    >
-                      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-                      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                      <line x1="12" x2="12" y1="19" y2="22" />
-                      <line x1="8" y1="22" x2="16" y2="22" />
-                    </svg>
-                    <span>Microphone</span>
-                  </Label>
-                  <Switch id="microphone" defaultChecked />
+                      Join Now
+                    </Button>
+                  </motion.div>
                 </div>
               </div>
-            </div>
-
-            <div className="pt-4">
-              <Button onClick={startMeeting} className="w-full bg-[#1a73e8] hover:bg-[#1765cc] text-white" size="lg">
-                Join now
-              </Button>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </main>
     </div>

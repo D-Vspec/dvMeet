@@ -84,9 +84,10 @@ export function usePeerConnections(
 
         // Handle connection state changes
         peerConnection.onconnectionstatechange = () => {
-          console.log(`Connection state with ${peerId}:`, peerConnection.connectionState)
-        }
-
+          console.log(`Connection state with ${peerId}: ${peerConnection.connectionState}`);
+          console.log(`Signaling state: ${peerConnection.signalingState}`);
+        };
+        
         // Handle ICE connection state changes
         peerConnection.oniceconnectionstatechange = () => {
           console.log(`ICE connection state with ${peerId}:`, peerConnection.iceConnectionState)
@@ -160,6 +161,13 @@ export function usePeerConnections(
       console.log(`User joined: ${userName} (${socketId})`)
       // Ensure a peer connection is created for the new user
       const existingPeerConnection = peerConnectionsRef.current[socketId]
+      if (!peerConnectionsRef.current[socketId]) {
+        console.log(`Creating new peer connection for ${userName} (${socketId})`);
+        createPeerConnection(socketId, true);
+      } else {
+        console.log(`Peer connection already exists for ${userName} (${socketId})`);
+      }
+      
       if (!existingPeerConnection) {
         createPeerConnection(socketId, true)
       }
@@ -199,15 +207,27 @@ export function usePeerConnections(
     }
 
     const handleAnswer = ({ fromId, sdp }: { fromId: string; sdp: RTCSessionDescriptionInit }) => {
-      console.log(`Received answer from ${fromId}`)
-      const peerConnection = peerConnectionsRef.current[fromId]
+      console.log(`Received answer from ${fromId}`);
+      
+      const peerConnection = peerConnectionsRef.current[fromId];
       if (peerConnection) {
-        peerConnection.setRemoteDescription(new RTCSessionDescription(sdp)).catch((err) => {
-          console.error("Error setting remote description:", err)
-          setConnectionError("Failed to establish connection")
-        })
+        if (peerConnection.signalingState === "stable") {
+          console.warn("Attempted to set remote answer in stable state. Skipping.");
+          return;
+        }
+        if (peerConnection.signalingState !== "have-local-offer") {
+          console.warn(`Unexpected signaling state ${peerConnection.signalingState}. Skipping answer application.`);
+          return;
+        }
+    
+        peerConnection.setRemoteDescription(new RTCSessionDescription(sdp))
+          .catch((err) => {
+            console.error("Error setting remote description:", err);
+            setConnectionError("Failed to establish connection");
+          });
       }
-    }
+    };
+    
 
     const handleIceCandidate = ({ fromId, candidate }: { fromId: string; candidate: RTCIceCandidateInit }) => {
       console.log(`Received ICE candidate from ${fromId}`)
