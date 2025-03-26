@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react"
 import { io, type Socket } from "socket.io-client"
 
-// Define the server URL - this should point to your WebSocket server
-const SOCKET_SERVER_URL = "wss://dvmeet.onrender.com";
+const SOCKET_SERVER_URL = "wss://meetsockets-516563029673.asia-south1.run.app"
 
 export function useSocket(roomId: string, userName: string): Socket | null {
   const [socket, setSocket] = useState<Socket | null>(null)

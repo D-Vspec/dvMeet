@@ -14,6 +14,10 @@ const io = new Server(server, {
   },
 })
 
+app.get("/", (req, res) => {
+  res.send("WebSocket server is running.")
+})
+
 // Store active rooms and their participants
 const rooms = new Map()
 
@@ -139,7 +143,7 @@ io.on("connection", (socket) => {
   })
 })
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT || 8080
 server.listen(PORT, () => {
   console.log(`Socket.IO server running on port ${PORT}`)
 })

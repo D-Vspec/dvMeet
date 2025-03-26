@@ -24,6 +24,13 @@ export function VideoStream({ stream, muted = false, className = "" }: VideoStre
     }
   }, [stream])
 
-  return <video ref={videoRef} autoPlay playsInline muted={muted} className={className} />
+  return stream ? (
+    <video ref={videoRef} autoPlay playsInline muted={muted} className={className} />
+  ) : (
+    <div className={`bg-gray-500 w-full h-full flex items-center justify-center ${className}`}>
+      No Video Available
+    </div>
+  );
+  
 }
 

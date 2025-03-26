@@ -1,43 +1,52 @@
-"use client"
+"use client";
 
-import { useState, type FormEvent } from "react"
-import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Video, ArrowLeft, Camera, Mic } from "lucide-react"
+import { useState, type FormEvent, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Video, ArrowLeft, Camera, Mic } from "lucide-react";
 
 export default function JoinMeeting() {
-  const router = useRouter()
-  const [meetingCode, setMeetingCode] = useState<string>("")
-  const [userName, setUserName] = useState<string>("")
-  const [error, setError] = useState<string>("")
-  const [nameError, setNameError] = useState<string>("")
+  const router = useRouter();
+  const [meetingCode, setMeetingCode] = useState<string>("");
+  const [userName, setUserName] = useState<string>("");
+  const [error, setError] = useState<string>("");
+  const [nameError, setNameError] = useState<string>("");
+  const [windowWidth, setWindowWidth] = useState<number>(1000);
+  const [windowHeight, setWindowHeight] = useState<number>(1000);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setWindowWidth(window.innerWidth);
+      setWindowHeight(window.innerHeight);
+    }
+  }, []);
 
   const handleJoin = (e: FormEvent): void => {
-    e.preventDefault()
-    let hasError = false
+    e.preventDefault();
+    let hasError = false;
 
     if (!meetingCode.trim()) {
-      setError("Please enter a meeting code")
-      hasError = true
+      setError("Please enter a meeting code");
+      hasError = true;
     } else if (meetingCode.length < 6) {
-      setError("Invalid meeting code")
-      hasError = true
+      setError("Invalid meeting code");
+      hasError = true;
     }
 
     if (!userName.trim()) {
-      setNameError("Please enter your name")
-      hasError = true
+      setNameError("Please enter your name");
+      hasError = true;
     }
 
-    if (hasError) return
+    if (hasError) return;
 
-    router.push(`/meeting/${meetingCode}?name=${encodeURIComponent(userName)}`)
-  }
+    router.push(`/meeting/${meetingCode}?name=${encodeURIComponent(userName)}`);
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -48,12 +57,12 @@ export default function JoinMeeting() {
         delayChildren: 0.2,
       },
     },
-  }
+  };
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
     visible: { y: 0, opacity: 1 },
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-zinc-900 to-neutral-900 text-white">
@@ -66,8 +75,8 @@ export default function JoinMeeting() {
             initial={{
               width: Math.random() * 300 + 50,
               height: Math.random() * 300 + 50,
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
+              x: Math.random() * windowWidth,
+              y: Math.random() * windowHeight,
               opacity: Math.random() * 0.5,
             }}
             animate={{
@@ -105,7 +114,10 @@ export default function JoinMeeting() {
               </motion.span>
             </Link>
             <Link href="/">
-              <Button variant="ghost" className="text-neutral-300 hover:text-white hover:bg-zinc-800/30">
+              <Button
+                variant="ghost"
+                className="text-neutral-300 hover:text-white hover:bg-zinc-800/30"
+              >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Home
               </Button>
@@ -116,7 +128,12 @@ export default function JoinMeeting() {
 
       <main className="relative z-10 flex-1">
         <div className="container mx-auto px-4 py-12">
-          <motion.div className="max-w-md mx-auto" variants={containerVariants} initial="hidden" animate="visible">
+          <motion.div
+            className="max-w-md mx-auto"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
             <motion.div
               className="bg-gradient-to-br from-zinc-900/70 to-neutral-900/70 rounded-2xl backdrop-blur-sm border border-zinc-700/30 shadow-xl overflow-hidden"
               variants={itemVariants}
@@ -128,7 +145,10 @@ export default function JoinMeeting() {
                 >
                   Join a Meeting
                 </motion.h1>
-                <motion.p className="text-neutral-200 mb-6" variants={itemVariants}>
+                <motion.p
+                  className="text-neutral-200 mb-6"
+                  variants={itemVariants}
+                >
                   Enter the meeting code and your name to connect
                 </motion.p>
 
@@ -142,8 +162,8 @@ export default function JoinMeeting() {
                       placeholder="Enter your name"
                       value={userName}
                       onChange={(e) => {
-                        setUserName(e.target.value)
-                        setNameError("")
+                        setUserName(e.target.value);
+                        setNameError("");
                       }}
                       className="bg-zinc-950/50 border-zinc-700/50 text-white placeholder:text-neutral-400 focus:border-neutral-500 transition-all"
                     />
@@ -167,8 +187,8 @@ export default function JoinMeeting() {
                       placeholder="Enter meeting code"
                       value={meetingCode}
                       onChange={(e) => {
-                        setMeetingCode(e.target.value)
-                        setError("")
+                        setMeetingCode(e.target.value);
+                        setError("");
                       }}
                       className="bg-zinc-950/50 border-zinc-700/50 text-white placeholder:text-neutral-400 focus:border-neutral-500 transition-all"
                     />
@@ -183,21 +203,38 @@ export default function JoinMeeting() {
                     )}
                   </motion.div>
 
-                  <motion.div className="pt-4 space-y-4" variants={itemVariants}>
+                  <motion.div
+                    className="pt-4 space-y-4"
+                    variants={itemVariants}
+                  >
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="camera" className="flex items-center gap-2 text-neutral-100">
+                      <Label
+                        htmlFor="camera"
+                        className="flex items-center gap-2 text-neutral-100"
+                      >
                         <Camera className="h-5 w-5 text-neutral-400" />
                         <span>Camera</span>
                       </Label>
-                      <Switch id="camera" defaultChecked className="data-[state=checked]:bg-neutral-500" />
+                      <Switch
+                        id="camera"
+                        defaultChecked
+                        className="data-[state=checked]:bg-neutral-500"
+                      />
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="microphone" className="flex items-center gap-2 text-neutral-100">
+                      <Label
+                        htmlFor="microphone"
+                        className="flex items-center gap-2 text-neutral-100"
+                      >
                         <Mic className="h-5 w-5 text-neutral-400" />
                         <span>Microphone</span>
                       </Label>
-                      <Switch id="microphone" defaultChecked className="data-[state=checked]:bg-neutral-500" />
+                      <Switch
+                        id="microphone"
+                        defaultChecked
+                        className="data-[state=checked]:bg-neutral-500"
+                      />
                     </div>
                   </motion.div>
 
@@ -214,13 +251,16 @@ export default function JoinMeeting() {
             </motion.div>
 
             <motion.div className="mt-6 text-center" variants={itemVariants}>
-              <Link href="/new-meeting" className="text-neutral-300 hover:text-white transition-colors">
-                Don't have a code? Start a new meeting instead
+              <Link
+                href="/new-meeting"
+                className="text-neutral-300 hover:text-white transition-colors"
+              >
+                No Code? Start a new meeting instead
               </Link>
             </motion.div>
           </motion.div>
         </div>
       </main>
     </div>
-  )
+  );
 }

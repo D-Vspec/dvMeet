@@ -1,44 +1,52 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Video, ArrowLeft, Camera, Mic, Copy, Link2 } from "lucide-react"
-import { toast } from "sonner"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Video, ArrowLeft, Camera, Mic, Copy, Link2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function NewMeeting() {
-  const router = useRouter()
-  const [meetingId, setMeetingId] = useState<string>("")
-  const [userName, setUserName] = useState<string>("")
-  const [nameError, setNameError] = useState<string>("")
-  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const router = useRouter();
+  const [meetingId, setMeetingId] = useState<string>("");
+  const [userName, setUserName] = useState<string>("");
+  const [nameError, setNameError] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [windowWidth, setWindowWidth] = useState<number>(1000);
+  const [windowHeight, setWindowHeight] = useState<number>(1000);
 
   useEffect(() => {
-    const id = Math.random().toString(36).substring(2, 12)
-    setMeetingId(id)
-    setIsLoading(false)
-  }, [])
+    const id = Math.random().toString(36).substring(2, 12);
+    setMeetingId(id);
+
+    if (typeof window !== "undefined") {
+      setWindowWidth(window.innerWidth);
+      setWindowHeight(window.innerHeight);
+    }
+
+    setIsLoading(false);
+  }, []);
 
   const copyLink = () => {
-    navigator.clipboard.writeText(`https://dvmeet.com/${meetingId}`)
+    navigator.clipboard.writeText(`https://dvmeet.com/${meetingId}`);
     toast.success("Link copied!", {
-      description: "Meeting link has been copied to clipboard"
-    })
-  }  
+      description: "Meeting link has been copied to clipboard",
+    });
+  };
 
   const startMeeting = (): void => {
     if (!userName.trim()) {
-      setNameError("Please enter your name")
-      return
+      setNameError("Please enter your name");
+      return;
     }
 
-    router.push(`/meeting/${meetingId}?name=${encodeURIComponent(userName)}`)
-  }
+    router.push(`/meeting/${meetingId}?name=${encodeURIComponent(userName)}`);
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -49,12 +57,12 @@ export default function NewMeeting() {
         delayChildren: 0.2,
       },
     },
-  }
+  };
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
     visible: { y: 0, opacity: 1 },
-  }
+  };
 
   if (isLoading) {
     return (
@@ -66,7 +74,7 @@ export default function NewMeeting() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -80,8 +88,8 @@ export default function NewMeeting() {
             initial={{
               width: Math.random() * 300 + 50,
               height: Math.random() * 300 + 50,
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * window.innerHeight,
+              x: Math.random() * windowWidth,
+              y: Math.random() * windowHeight,
               opacity: Math.random() * 0.5,
             }}
             animate={{
@@ -119,7 +127,10 @@ export default function NewMeeting() {
               </motion.span>
             </Link>
             <Link href="/">
-              <Button variant="ghost" className="text-neutral-300 hover:text-white hover:bg-zinc-800/30">
+              <Button
+                variant="ghost"
+                className="text-neutral-300 hover:text-white hover:bg-zinc-800/30"
+              >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Home
               </Button>
@@ -130,7 +141,12 @@ export default function NewMeeting() {
 
       <main className="relative z-10 flex-1">
         <div className="container mx-auto px-4 py-12">
-          <motion.div className="max-w-md mx-auto" variants={containerVariants} initial="hidden" animate="visible">
+          <motion.div
+            className="max-w-md mx-auto"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
             <motion.div
               className="bg-gradient-to-br from-zinc-900/70 to-neutral-900/70 rounded-2xl backdrop-blur-sm border border-zinc-700/30 shadow-xl overflow-hidden"
               variants={itemVariants}
@@ -142,7 +158,10 @@ export default function NewMeeting() {
                 >
                   Your Meeting is Ready
                 </motion.h1>
-                <motion.p className="text-neutral-200 mb-6" variants={itemVariants}>
+                <motion.p
+                  className="text-neutral-200 mb-6"
+                  variants={itemVariants}
+                >
                   Share the link with others or join now
                 </motion.p>
 
@@ -151,7 +170,9 @@ export default function NewMeeting() {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <Link2 className="h-5 w-5 text-neutral-400" />
-                        <span className="text-sm font-medium text-neutral-100">Meeting link</span>
+                        <span className="text-sm font-medium text-neutral-100">
+                          Meeting link
+                        </span>
                       </div>
                       <Button
                         variant="ghost"
@@ -187,8 +208,8 @@ export default function NewMeeting() {
                       placeholder="Enter your name"
                       value={userName}
                       onChange={(e) => {
-                        setUserName(e.target.value)
-                        setNameError("")
+                        setUserName(e.target.value);
+                        setNameError("");
                       }}
                       className="bg-zinc-950/50 border-zinc-700/50 text-white placeholder:text-neutral-400 focus:border-neutral-500 transition-all"
                     />
@@ -203,21 +224,38 @@ export default function NewMeeting() {
                     )}
                   </motion.div>
 
-                  <motion.div className="pt-4 space-y-4" variants={itemVariants}>
+                  <motion.div
+                    className="pt-4 space-y-4"
+                    variants={itemVariants}
+                  >
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="camera" className="flex items-center gap-2 text-neutral-100">
+                      <Label
+                        htmlFor="camera"
+                        className="flex items-center gap-2 text-neutral-100"
+                      >
                         <Camera className="h-5 w-5 text-neutral-400" />
                         <span>Camera</span>
                       </Label>
-                      <Switch id="camera" defaultChecked className="data-[state=checked]:bg-neutral-500" />
+                      <Switch
+                        id="camera"
+                        defaultChecked
+                        className="data-[state=checked]:bg-neutral-500"
+                      />
                     </div>
 
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="microphone" className="flex items-center gap-2 text-neutral-100">
+                      <Label
+                        htmlFor="microphone"
+                        className="flex items-center gap-2 text-neutral-100"
+                      >
                         <Mic className="h-5 w-5 text-neutral-400" />
                         <span>Microphone</span>
                       </Label>
-                      <Switch id="microphone" defaultChecked className="data-[state=checked]:bg-neutral-500" />
+                      <Switch
+                        id="microphone"
+                        defaultChecked
+                        className="data-[state=checked]:bg-neutral-500"
+                      />
                     </div>
                   </motion.div>
 
@@ -236,5 +274,5 @@ export default function NewMeeting() {
         </div>
       </main>
     </div>
-  )
+  );
 }
