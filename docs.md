@@ -1,6 +1,5 @@
 # P2P and TURN Server Architecture in dvMeet
 
-## 📅 Last Updated: 2025-07-26 09:49:41 UTC
 ## 👤 Author: D-Vspec
 
 A comprehensive guide to understanding the peer-to-peer (P2P) WebRTC implementation and TURN server architecture in dvMeet.
