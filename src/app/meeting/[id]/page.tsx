@@ -1,73 +1,73 @@
-"use client";
+"use client"
 
-import { useState, type FormEvent, useEffect } from "react";
-import { useParams, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useMobile } from "@/hooks/use-mobile";
-import { useMediaStream } from "@/hooks/use-media-stream";
-import { VideoStream } from "@/components/video-stream";
-import { useSocket } from "@/hooks/use-socket";
-import { usePeerConnections } from "@/hooks/use-peer-connections";
+import { useState, type FormEvent, useEffect } from "react"
+import { useParams, useSearchParams } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer"
+import { Input } from "@/components/ui/input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useMobile } from "@/hooks/use-mobile"
+import { useMediaStream } from "@/hooks/use-media-stream"
+import { VideoStream } from "@/components/video-stream"
+import { useSocket } from "@/hooks/use-socket"
+import { usePeerConnections } from "@/hooks/use-peer-connections"
 
 interface Participant {
-  id?: number;
-  socketId?: string;
-  name: string;
-  avatar?: string;
-  isSelf?: boolean;
-  isMuted: boolean;
-  isVideoOff: boolean;
+  id?: number
+  socketId?: string
+  name: string
+  avatar?: string
+  isSelf?: boolean
+  isMuted: boolean
+  isVideoOff: boolean
 }
 
 interface ChatMessage {
-  id: number;
-  sender: string;
-  time: string;
-  text: string;
+  id: number
+  sender: string
+  time: string
+  text: string
 }
 
 export default function MeetingRoom() {
-  const params = useParams();
-  const searchParams = useSearchParams();
-  const meetingId = params!.id as string;
-  const userName = searchParams!.get("name") || "You";
-  const isMobile = useMobile();
+  const params = useParams()
+  const searchParams = useSearchParams()
+  const meetingId = params!.id as string
+  const userName = searchParams!.get("name") || "You"
+  const isMobile = useMobile()
 
-  const [participants, setParticipants] = useState<Participant[]>([]);
-  const [isMuted, setIsMuted] = useState<boolean>(false);
-  const [isVideoOff, setIsVideoOff] = useState<boolean>(false);
-  const [isScreenSharing, setIsScreenSharing] = useState<boolean>(false);
-  const [showChat, setShowChat] = useState<boolean>(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [newMessage, setNewMessage] = useState<string>("");
-  const [showParticipants, setShowParticipants] = useState<boolean>(false);
-  const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
-  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [participants, setParticipants] = useState<Participant[]>([])
+  const [isMuted, setIsMuted] = useState<boolean>(false)
+  const [isVideoOff, setIsVideoOff] = useState<boolean>(false)
+  const [isScreenSharing, setIsScreenSharing] = useState<boolean>(false)
+  const [showChat, setShowChat] = useState<boolean>(false)
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [newMessage, setNewMessage] = useState<string>("")
+  const [showParticipants, setShowParticipants] = useState<boolean>(false)
+  const [isFullScreen, setIsFullScreen] = useState<boolean>(false)
+  const [isConnected, setIsConnected] = useState<boolean>(false)
 
   // Get media stream
   const { stream, error, status } = useMediaStream({
     video: !isVideoOff,
     audio: !isMuted,
-  });
+  })
 
   // Get socket connection
-  const socket = useSocket(meetingId, userName);
+  const socket = useSocket(meetingId, userName)
 
   // Get peer connections
   const { peerStreams, updatePeerStreams, isConnecting, connectionError } = usePeerConnections(
     socket,
     stream,
-    meetingId
-  );
+    meetingId,
+  )
 
   const handleParticipantsList = (serverParticipants: Participant[]) => {
-    if (!socket) return;
+    if (!socket) return
     const selfParticipant: Participant = {
       id: 1,
       name: userName || "You",
@@ -76,7 +76,7 @@ export default function MeetingRoom() {
       isMuted,
       isVideoOff,
       socketId: socket.id,
-    };
+    }
 
     const otherParticipants = serverParticipants
       .filter((p) => p.socketId !== socket.id)
@@ -88,18 +88,20 @@ export default function MeetingRoom() {
         avatar: "/placeholder.svg?height=200&width=200",
         isMuted: p.isMuted || false,
         isVideoOff: p.isVideoOff || false,
-      }));
+      }))
 
-    setParticipants([selfParticipant, ...otherParticipants]);
-  };
+    setParticipants([selfParticipant, ...otherParticipants])
+  }
 
   const handleParticipantJoined = (newParticipant: Participant) => {
+    console.log("New participant joined:", newParticipant)
+
     setParticipants((prev) => {
       if (prev.some((p) => p.socketId === newParticipant.socketId)) {
-        return prev;
+        return prev
       }
 
-      const nextId = Math.max(...prev.map((p) => p.id || 0)) + 1;
+      const nextId = Math.max(...prev.map((p) => p.id || 0)) + 1
       return [
         ...prev,
         {
@@ -111,57 +113,66 @@ export default function MeetingRoom() {
           isMuted: newParticipant.isMuted || false,
           isVideoOff: newParticipant.isVideoOff || false,
         },
-      ];
-    });
-  };
+      ]
+    })
+
+    // Initiate connection with the new participant if we have a stream
+    if (stream && socket) {
+      // Force reconnection to the new peer
+      socket.emit("request-connection", {
+        targetSocketId: newParticipant.socketId,
+        meetingId,
+      })
+    }
+  }
 
   const getParticipantCountString = () => {
-    const count = participants.length;
-    return `${count} ${count === 1 ? "participant" : "participants"}`;
-  };
+    const count = participants.length
+    return `${count} ${count === 1 ? "participant" : "participants"}`
+  }
 
   // Initialize socket event listeners
   useEffect(() => {
-    if (!socket) return;
+    if (!socket) return
 
-    console.log("Setting up socket event listeners");
+    console.log("Setting up socket event listeners")
 
     // Set connected state
-    setIsConnected(true);
+    setIsConnected(true)
 
     // Handle participant updated
     const handleParticipantUpdated = (updatedParticipant: Participant) => {
       setParticipants((prev) =>
-        prev.map((p) => (p.socketId === updatedParticipant.socketId ? { ...p, ...updatedParticipant } : p))
-      );
-    };
+        prev.map((p) => (p.socketId === updatedParticipant.socketId ? { ...p, ...updatedParticipant } : p)),
+      )
+    }
 
     // Handle participant leaving
     const handleParticipantLeft = (participantSocketId: string) => {
-      setParticipants((prev) => prev.filter((p) => p.socketId !== participantSocketId));
-    };
+      setParticipants((prev) => prev.filter((p) => p.socketId !== participantSocketId))
+    }
 
     // Handle new messages
     const handleNewMessage = (message: ChatMessage) => {
-      setMessages((prev) => [...prev, message]);
-    };
+      setMessages((prev) => [...prev, message])
+    }
 
     // Handle media state updates
     const handleMediaStateUpdated = (update: { socketId: string; isMuted: boolean; isVideoOff: boolean }) => {
       setParticipants((prev) =>
         prev.map((p) =>
-          p.socketId === update.socketId ? { ...p, isMuted: update.isMuted, isVideoOff: update.isVideoOff } : p
-        )
-      );
-    };
+          p.socketId === update.socketId ? { ...p, isMuted: update.isMuted, isVideoOff: update.isVideoOff } : p,
+        ),
+      )
+    }
 
     // Add event listeners
-    socket.on("participants-list", handleParticipantsList);
-    socket.on("participant-updated", handleParticipantUpdated);
-    socket.on("participant-joined", handleParticipantJoined);
-    socket.on("participant-left", handleParticipantLeft);
-    socket.on("new-message", handleNewMessage);
-    socket.on("media-state-updated", handleMediaStateUpdated);
+    socket.on("participants-list", handleParticipantsList)
+    socket.on("participant-updated", handleParticipantUpdated)
+    socket.on("participant-joined", handleParticipantJoined)
+    socket.on("participant-left", handleParticipantLeft)
+    socket.on("new-message", handleNewMessage)
+    socket.on("media-state-updated", handleMediaStateUpdated)
 
     // Initialize with self as first participant
     setParticipants([
@@ -174,120 +185,164 @@ export default function MeetingRoom() {
         isVideoOff,
         socketId: socket.id,
       },
-    ]);
+    ])
 
     // Cleanup function to remove event listeners
     return () => {
-      console.log("Cleaning up socket event listeners");
-      socket.off("participants-list", handleParticipantsList);
-      socket.off("participant-updated", handleParticipantUpdated);
-      socket.off("participant-joined", handleParticipantJoined);
-      socket.off("participant-left", handleParticipantLeft);
-      socket.off("new-message", handleNewMessage);
-      socket.off("media-state-updated", handleMediaStateUpdated);
-    };
-  }, [socket, userName, isMuted, isVideoOff]);
-
-  // Update server when media state changes
-  useEffect(() => {
-    if (socket && isConnected) {
-      socket.emit("media-state-change", {
-        socketId: socket.id,
-        isMuted,
-        isVideoOff,
-      });
-
-      // Update local participant
-      setParticipants((prev) => prev.map((p) => (p.isSelf ? { ...p, isMuted, isVideoOff } : p)));
+      console.log("Cleaning up socket event listeners")
+      socket.off("participants-list", handleParticipantsList)
+      socket.off("participant-updated", handleParticipantUpdated)
+      socket.off("participant-joined", handleParticipantJoined)
+      socket.off("participant-left", handleParticipantLeft)
+      socket.off("new-message", handleNewMessage)
+      socket.off("media-state-updated", handleMediaStateUpdated)
     }
-  }, [isMuted, isVideoOff, socket, isConnected]);
+  }, [socket, userName, isMuted, isVideoOff])
+
+  // Add this useEffect to ensure peer connections are updated when participants change
+  useEffect(() => {
+    if (socket && stream && participants.length > 1) {
+      // Check if we need to establish connections with any participants
+      participants.forEach((participant) => {
+        if (!participant.isSelf && participant.socketId && !peerStreams[participant.socketId]) {
+          console.log("Requesting connection with participant:", participant.socketId)
+          socket.emit("request-connection", {
+            targetSocketId: participant.socketId,
+            meetingId,
+          })
+        }
+      })
+    }
+  }, [participants, socket, stream, peerStreams, meetingId])
 
   const toggleMute = (): void => {
     if (stream) {
       stream.getAudioTracks().forEach((track) => {
-        track.enabled = isMuted;
-      });
+        track.enabled = isMuted
+      })
     }
-    setIsMuted(!isMuted);
-  };
+    setIsMuted(!isMuted)
+
+    // Notify peers about media state change immediately
+    if (socket && isConnected) {
+      const newIsMuted = !isMuted
+      socket.emit("media-state-change", {
+        socketId: socket.id,
+        isMuted: newIsMuted,
+        isVideoOff,
+      })
+
+      // Update local participant state
+      setParticipants((prev) => prev.map((p) => (p.isSelf ? { ...p, isMuted: newIsMuted } : p)))
+    }
+  }
 
   const toggleVideo = async (): Promise<void> => {
-    const newIsVideoOff = !isVideoOff;
-    setIsVideoOff(newIsVideoOff);
+    const newIsVideoOff = !isVideoOff
 
     if (stream && stream.getVideoTracks().length > 0) {
       stream.getVideoTracks().forEach((track) => {
-        track.enabled = !newIsVideoOff;
-      });
+        track.enabled = !newIsVideoOff
+      })
     }
-  };
+
+    setIsVideoOff(newIsVideoOff)
+
+    // Notify peers about media state change immediately
+    if (socket && isConnected) {
+      socket.emit("media-state-change", {
+        socketId: socket.id,
+        isMuted,
+        isVideoOff: newIsVideoOff,
+      })
+
+      // Update local participant state
+      setParticipants((prev) => prev.map((p) => (p.isSelf ? { ...p, isVideoOff: newIsVideoOff } : p)))
+    }
+
+    // If we're turning video back on, we may need to renegotiate connections
+    if (!newIsVideoOff && socket) {
+      // Force reconnection to all peers
+      socket.emit("renegotiate-connections", { meetingId })
+    }
+  }
 
   const toggleScreenShare = async (): Promise<void> => {
     try {
       if (!isScreenSharing) {
         const screenStream = await navigator.mediaDevices.getDisplayMedia({
           video: true,
-        });
+        })
 
         // Replace video track with screen sharing track
         if (stream) {
-          const videoTrack = stream.getVideoTracks()[0];
+          const videoTrack = stream.getVideoTracks()[0]
           if (videoTrack) {
-            stream.removeTrack(videoTrack);
-            videoTrack.stop();
+            stream.removeTrack(videoTrack)
+            videoTrack.stop()
           }
 
-          const screenTrack = screenStream.getVideoTracks()[0];
-          stream.addTrack(screenTrack);
+          const screenTrack = screenStream.getVideoTracks()[0]
+          stream.addTrack(screenTrack)
 
           // Update peer connections with the new stream
-          updatePeerStreams(stream);
+          updatePeerStreams(stream)
 
           // Listen for the end of screen sharing
           screenTrack.onended = () => {
-            toggleScreenShare();
-          };
+            toggleScreenShare()
+          }
         }
 
         // Notify peers about screen sharing
         if (socket) {
-          socket.emit("screen-share-started", { meetingId });
+          socket.emit("screen-share-started", { meetingId })
         }
       } else {
         // Stop screen sharing and revert to camera
         if (stream) {
-          const screenTrack = stream.getVideoTracks()[0];
+          const screenTrack = stream.getVideoTracks()[0]
           if (screenTrack) {
-            stream.removeTrack(screenTrack);
-            screenTrack.stop();
+            stream.removeTrack(screenTrack)
+            screenTrack.stop()
           }
 
           // Re-enable camera
           const newCameraStream = await navigator.mediaDevices.getUserMedia({
             video: true,
-          });
-          const cameraTrack = newCameraStream.getVideoTracks()[0];
-          stream.addTrack(cameraTrack);
+          })
+          const cameraTrack = newCameraStream.getVideoTracks()[0]
+          stream.addTrack(cameraTrack)
 
           // Update peer connections with the new stream
-          updatePeerStreams(stream);
+          updatePeerStreams(stream)
         }
 
         // Notify peers about screen sharing ended
         if (socket) {
-          socket.emit("screen-share-ended", { meetingId });
+          socket.emit("screen-share-ended", { meetingId })
         }
       }
 
-      setIsScreenSharing(!isScreenSharing);
+      setIsScreenSharing(!isScreenSharing)
     } catch (err) {
-      console.error("Error during screen sharing:", err);
+      console.error("Error during screen sharing:", err)
     }
-  };
+  }
+
+  const reconnectWithAllPeers = (): void => {
+    if (socket && stream) {
+      console.log("Reconnecting with all peers")
+      socket.emit("renegotiate-connections", { meetingId })
+
+      // Update peer connections with the current stream
+      updatePeerStreams(stream)
+    }
+  }
 
   const sendMessage = (e: FormEvent): void => {
-    e.preventDefault();
-    if (!newMessage.trim() || !socket) return;
+    e.preventDefault()
+    if (!newMessage.trim() || !socket) return
 
     const newMsg: ChatMessage = {
       id: messages.length + 1,
@@ -297,52 +352,52 @@ export default function MeetingRoom() {
         minute: "2-digit",
       }),
       text: newMessage,
-    };
+    }
 
     // Add message locally
-    setMessages((prev) => [...prev, newMsg]);
+    setMessages((prev) => [...prev, newMsg])
 
     // Send message through socket
-    socket.emit("send-message", newMsg);
+    socket.emit("send-message", newMsg)
 
     // Clear input
-    setNewMessage("");
-  };
+    setNewMessage("")
+  }
 
   const toggleFullScreen = (): void => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch((err) => {
-        console.log(`Error attempting to enable full-screen mode: ${err.message}`);
-      });
+        console.log(`Error attempting to enable full-screen mode: ${err.message}`)
+      })
     } else {
       if (document.exitFullscreen) {
-        document.exitFullscreen();
+        document.exitFullscreen()
       }
     }
-    setIsFullScreen(!isFullScreen);
-  };
+    setIsFullScreen(!isFullScreen)
+  }
 
   const endCall = (): void => {
     if (window.confirm("Are you sure you want to leave the meeting?")) {
       // Stop all media tracks before leaving
-      stream?.getTracks().forEach((track) => track.stop());
+      stream?.getTracks().forEach((track) => track.stop())
 
       // Disconnect socket
       if (socket) {
-        socket.disconnect();
+        socket.disconnect()
       }
 
-      window.location.href = "/";
+      window.location.href = "/"
     }
-  };
+  }
 
   const getGridClass = (): string => {
-    const count = participants.length;
-    if (count === 1) return "grid-cols-1";
-    if (count === 2) return "grid-cols-1 md:grid-cols-2";
-    if (count <= 4) return "grid-cols-1 sm:grid-cols-2";
-    return "grid-cols-1 sm:grid-cols-2 md:grid-cols-3";
-  };
+    const count = participants.length
+    if (count === 1) return "grid-cols-1"
+    if (count === 2) return "grid-cols-1 md:grid-cols-2"
+    if (count <= 4) return "grid-cols-1 sm:grid-cols-2"
+    return "grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
+  }
 
   // Show loading state while getting media permissions
   if (status === "loading" || isConnecting) {
@@ -357,7 +412,7 @@ export default function MeetingRoom() {
           </p>
         </div>
       </div>
-    );
+    )
   }
 
   // Show error state if media access failed
@@ -374,7 +429,7 @@ export default function MeetingRoom() {
           </Button>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -489,8 +544,8 @@ export default function MeetingRoom() {
                 <TabsTrigger
                   value="chat"
                   onClick={() => {
-                    setShowChat(true);
-                    setShowParticipants(false);
+                    setShowChat(true)
+                    setShowParticipants(false)
                   }}
                 >
                   Chat
@@ -498,8 +553,8 @@ export default function MeetingRoom() {
                 <TabsTrigger
                   value="participants"
                   onClick={() => {
-                    setShowParticipants(true);
-                    setShowChat(false);
+                    setShowParticipants(true)
+                    setShowChat(false)
                   }}
                 >
                   {getParticipantCountString()}
@@ -539,10 +594,7 @@ export default function MeetingRoom() {
                 <ScrollArea className="h-full">
                   <div className="p-4 space-y-4">
                     {participants.map((participant) => (
-                      <div
-                        key={participant.id || participant.socketId}
-                        className="flex items-center justify-between"
-                      >
+                      <div key={participant.id || participant.socketId} className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <Avatar>
                             <AvatarImage
@@ -812,9 +864,7 @@ export default function MeetingRoom() {
                                   src={participant.avatar || "/placeholder.svg?height=200&width=200"}
                                   alt={participant.name}
                                 />
-                                <AvatarFallback>
-                                  {participant.name ? participant.name.charAt(0) : "U"}
-                                </AvatarFallback>
+                                <AvatarFallback>{participant.name ? participant.name.charAt(0) : "U"}</AvatarFallback>
                               </Avatar>
                               <div>
                                 <div className="text-[#202124]">
@@ -862,8 +912,8 @@ export default function MeetingRoom() {
                     size="icon"
                     className="rounded-full h-10 w-10 sm:h-12 sm:w-12 bg-[#3c4043] hover:bg-[#5f6368] text-white"
                     onClick={() => {
-                      setShowChat(!showChat);
-                      setShowParticipants(false);
+                      setShowChat(!showChat)
+                      setShowParticipants(false)
                     }}
                   >
                     <svg
@@ -897,8 +947,8 @@ export default function MeetingRoom() {
                     size="icon"
                     className="rounded-full h-10 w-10 sm:h-12 sm:w-12 bg-[#3c4043] hover:bg-[#5f6368] text-white"
                     onClick={() => {
-                      setShowParticipants(!showParticipants);
-                      setShowChat(false);
+                      setShowParticipants(!showParticipants)
+                      setShowChat(false)
                     }}
                   >
                     <svg
@@ -978,6 +1028,36 @@ export default function MeetingRoom() {
             </Tooltip>
           </TooltipProvider>
 
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="rounded-full h-10 w-10 sm:h-12 sm:w-12 bg-[#3c4043] hover:bg-[#5f6368] text-white"
+                  onClick={reconnectWithAllPeers}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+                  </svg>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Reconnect</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
           <Button
             variant="destructive"
             size="icon"
@@ -1002,5 +1082,6 @@ export default function MeetingRoom() {
         </div>
       </div>
     </div>
-  );
+  )
 }
+
