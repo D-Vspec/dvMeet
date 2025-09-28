@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { io, type Socket } from "socket.io-client"
 
-const SOCKET_SERVER_URL = "http://ec2-15-206-149-187.ap-south-1.compute.amazonaws.com:3001"
+const SOCKET_SERVER_URL = "http://ec2-52-66-248-52.ap-south-1.compute.amazonaws.com:3001"
 
 export function useSocket(roomId: string, userName: string): Socket | null {
   const [socket, setSocket] = useState<Socket | null>(null)
@@ -15,7 +15,7 @@ export function useSocket(roomId: string, userName: string): Socket | null {
         roomId,
         userName,
       },
-      transports: ["websocket"],
+      transports: ["websocket", "polling"],
       autoConnect: true,
     })
 
